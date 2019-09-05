@@ -1,0 +1,25 @@
+{
+  "name": "devconnector2",
+  "version": "1.0.0",
+  "description": "Social network for developers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "server": "nodemon server.js"
+  },
+  "repository": "https://github.com/matsubrasil/devconnector2.git",
+  "author": "matsubrasil <matsuboy@outlook.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^8.1.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^7.12.1",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "concurrently": "^4.1.2",
+    "nodemon": "^1.19.2"
+  }
+}
