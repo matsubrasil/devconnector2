@@ -14,9 +14,11 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
+    "gravatar": "^1.8.0",
     "jsonwebtoken": "^8.5.1",
     "pg": "^7.12.1",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "validator": "^11.1.0"
   },
   "devDependencies": {
     "concurrently": "^4.1.2",
