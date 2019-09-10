@@ -9,9 +9,14 @@ const authController = require('./../_controllers/auth.controller');
 // @access  Public
 route.post('/register', authController.register);
 
-// @route   GET api/auth
-// @desc    Test route
+// @route   Post api/auth/login
+// @desc    Login user
 // @access  Public
-route.get('/', auth, authController.test);
+route.post('/login', authController.login);
+
+// @route   GET api/auth
+// @desc    Take user info
+// @access  Public
+route.get('/', auth, authController.user_info);
 
 module.exports = route;

@@ -6,13 +6,15 @@ const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
 const validateRegisterInput = require('./../_shared/_validation/register.validation');
+const validateLoginInput = require('./../_shared/_validation/login.validation');
 
 const pool = new Pool();
 
-// @route   GET api/auth/test
+// ---------------------------------------------------------
+// @route   GET api/auth/
 // @desc    Tests auth route
 // @access  Public
-const test = async (req, res) => {
+const user_info = async (req, res) => {
   // Open connection
   const client = await pool.connect();
   const id = req.user.id;
@@ -33,9 +35,12 @@ const test = async (req, res) => {
   } catch (e) {
     console.log({ err: e.message });
     return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
   }
 };
 
+// ---------------------------------------------------------
 // @route   GET api/auth/register
 // @desc    Register new User
 // @access  Public
@@ -124,47 +129,75 @@ const register = async (req, res) => {
   }
 };
 
-/*
-const register = async (req, res) => {
+// ---------------------------------------------------------
+// @route   GET api/auth/login
+// @desc    Login user
+// @access  Public
+const login = async (req, res) => {
+  console.log(req.body);
+  const { errors, isValid } = validateLoginInput(req.body);
+
+  // Check Validation
+  if (!isValid) {
+    // If any errors, send 400 with errors object
+    return res.status(400).send({ success: false, error: errors });
+  }
+
+  const { email, password } = req.body;
+
+  // Open connection
   const client = await pool.connect();
-  const { username, email, password, password2 } = req.body;
-  const errors = {};
-  // verify email
-  const txFindEmail = 'SELECT * FROM users WHERE email = $1';
-  const params_email = [email];
 
   try {
+    // See if user exists
+
+    const txFindEmail =
+      'SELECT id, email, password FROM users WHERE email = $1';
+    const params_email = [email];
     let result = await pool.query(txFindEmail, params_email);
 
     console.log('result ==> ', result.rowCount);
 
-    if (result.rowCount === 1) {
-      errors.email = 'Email already exists';
+    if (result.rowCount === 0) {
+      errors.credential = 'Invalid credentials';
       return res.status(400).send({ success: false, errors });
     }
 
-    //
-    const txInsertUser =
-      'INSERT INTO users(username, email, password) values ($1, $2, $3) RETURNING *';
-    const params_user = [username, email, password];
-    result = await pool.query(txInsertUser, params_user);
-    console.log('insert==>', result);
-    const newUser = {
-      id: result.rows[0].id,
-      username: result.rows[0].username,
-      email: result.rows[0].email,
+    const { id, password: bd_password } = result.rows[0];
+    // verify password
+
+    const isMatch = await bcrypt.compare(password, bd_password);
+    if (!isMatch) {
+      errors.credential = 'Invalid credentials';
+      return res.status(400).send({ success: false, errors });
+    }
+
+    const payload = {
+      user: {
+        id,
+      },
     };
-    res.status(201).send({ success: true, user: newUser });
+
+    const token = await jwt.sign(payload, process.env.MYSECRET, {
+      expiresIn: 3600,
+    });
+
+    return res.status(200).send({ success: true, token });
+
+    // Return jwt
   } catch (e) {
-    res.status(500).send({ error: e.message });
+    console.error('error', e.message);
+    return res.status(500).send({ error: e.message });
   } finally {
     client.release();
   }
 };
-*/
+
+//
 const controller = {
-  test,
+  user_info,
   register,
+  login,
 };
 
 module.exports = controller;
