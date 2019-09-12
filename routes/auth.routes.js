@@ -1,6 +1,5 @@
 const express = require('express');
 const route = express.Router();
-const auth = require('./../middleware/auth.middleware');
 
 const authController = require('./../_controllers/auth.controller');
 
@@ -13,10 +12,5 @@ route.post('/register', authController.register);
 // @desc    Login user
 // @access  Public
 route.post('/login', authController.login);
-
-// @route   GET api/auth
-// @desc    Take user info
-// @access  Public
-route.get('/', auth, authController.user_info);
 
 module.exports = route;

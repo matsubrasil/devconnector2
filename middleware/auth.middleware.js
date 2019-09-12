@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 module.exports = async function(req, res, next) {
   // Get token from header
   const token = req.header('x-auth-token');
-  // console.log('token', token);
+  //console.log('token', token);
 
   // Check if not token
   if (!token) {
@@ -14,7 +14,7 @@ module.exports = async function(req, res, next) {
 
   // Verify token
   try {
-    // console.log('my', process.env.MYSECRET);
+    // onsole.log('my', process.env.MYSECRET);
     const decoded = await jwt.verify(token, process.env.MYSECRET);
     // console.log('decoded', decoded);
     req.user = decoded.user;

@@ -1,11 +1,12 @@
 const express = require('express');
 const route = express.Router();
+const profileController = require('./../_controllers/profile.controller');
+const auth = require('./../middleware/auth.middleware');
 
-// @route   GET api/profile
-// @desc    Test route
-// @access  Public
-route.use('/', (req, res) => {
-  res.status(200).send({ message: 'teste profile' });
-});
+// @route   GET api/profile/me
+// @desc    Get current user profile
+// @access  Private
+route.get('/me', auth, profileController.profile);
+route.post('/', auth, profileController.include);
 
 module.exports = route;

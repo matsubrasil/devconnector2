@@ -1,4 +1,4 @@
--- psql "dbname='dbhook' user='user_api' password='pwd_api' host='localhost'" -f ~/projetos/react-hooks/traversy/devconnector2/_database/script_user.sql 
+-- psql "dbname='dbhook' user='user_api' password='pwd_api' host='localhost'" -f ~/projetos/react-hooks/traversy/devconnector2/_database/script_profile.sql 
 
 CREATE TABLE profile
 (
@@ -16,3 +16,23 @@ CREATE TABLE profile
 
 
 
+INSERT INTO profile
+  (
+  id_user
+  , company
+  , website
+  , location
+  , status
+  , skills
+  , bio
+  , githubusername)
+VALUES(
+    5
+  , 'Star inc.'
+  , 'http://www.star.com'
+  , 'Merryll 4300 SA'
+  , 'Senior'
+  , 'html, c, asp'
+  , 'Bla blas nmsasa'
+  , 'matsub'
+);
