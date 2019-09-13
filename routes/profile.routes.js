@@ -7,6 +7,8 @@ const auth = require('./../middleware/auth.middleware');
 // @desc    Get current user profile
 // @access  Private
 route.get('/me', auth, profileController.profile);
-route.post('/', auth, profileController.include);
+route.get('/', profileController.all);
+route.post('/', auth, profileController.create);
+route.put('/', auth, profileController.update);
 
 module.exports = route;
