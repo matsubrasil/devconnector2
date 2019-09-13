@@ -10,5 +10,6 @@ route.get('/me', auth, profileController.profile);
 route.get('/', profileController.all);
 route.post('/', auth, profileController.create);
 route.put('/', auth, profileController.update);
-
+route.get('/user/:user_id', profileController.profileByUser);
+route.delete('/', auth, profileController.delete);
 module.exports = route;

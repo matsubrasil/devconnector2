@@ -162,7 +162,7 @@ const createProfile = async (req, res) => {
 };
 
 // ---------------------------------------------------------
-// @route   POST api/profile/update
+// @route   PUT api/profile/update
 // @desc    User profile update
 // @access  Private
 const updateProfile = async (req, res) => {
@@ -288,10 +288,171 @@ const allProfiles = async (req, res) => {
     let result = await pool.query(txFindAllProfile);
 
     console.log('result ==> ', result);
+
+    const data = result.rows;
+
+    const profiles = [];
+    data.map(p => {
+      const {
+        id,
+        id_user,
+        name,
+        avatar,
+        company,
+        website,
+        location,
+        status,
+        skills,
+        bio,
+        githubusername,
+      } = p;
+      const { twitter, facebook, linkedin, instagram, youtube } = p;
+
+      const profile = {
+        id,
+        id_user,
+        name,
+        avatar,
+        company,
+        website,
+        location,
+        status,
+        skills,
+        bio,
+        githubusername,
+      };
+      const social = { twitter, facebook, linkedin, instagram, youtube };
+      profiles.push({ profile, social });
+    });
+
     return res.status(200).send({
       success: true,
-      profiles: result.rows,
+      profiles: profiles,
     });
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+
+// ---------------------------------------------------------
+// @route   GET api/profile/user/:user_id
+// @desc    Get profile by user id
+// @access  Public
+const profileByUser = async (req, res) => {
+  // Open connection
+  const client = await pool.connect();
+  const errors = {};
+  try {
+    const { user_id } = req.params;
+
+    const txFindProfileByUser = `SELECT   p.id
+                                        , p.id_user
+                                        , u.name
+                                        , u.avatar
+                                        , p.company
+                                        , p.website
+                                        , p.location
+                                        , p.status
+                                        , p.skills
+                                        , p.bio
+                                        , p.githubusername
+                                FROM profile p
+                                INNER JOIN users u ON p.id_user = u.id
+                                WHERE id_user = $1;`;
+
+    const params_id = [user_id];
+    let result = await pool.query(txFindProfileByUser, params_id);
+
+    console.log('result ==> ', result);
+
+    if (result.rowCount === 0) {
+      errors.profile = 'Profile not found';
+      return res.status(400).send({ success: false, errors });
+    }
+    const id_profile = result.rows[0].id;
+
+    const txFindSocial = `SELECT  
+                                  twitter
+                                , facebook
+                                , linkedin
+                                , instagram
+                                , youtube
+                          FROM social
+                          WHERE id_profile = $1;`;
+
+    const params_social = [id_profile];
+    let result_social = await pool.query(txFindSocial, params_social);
+
+    return res.status(200).send({
+      success: true,
+      profile: result.rows[0],
+      social: result_social.rows[0],
+    });
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+
+// ---------------------------------------------------------
+// @route   DELETE api/profile/
+// @desc    Delete profile, user and post
+// @access  Private
+const deleteProfile = async (req, res) => {
+  // Open connection
+  const client = await pool.connect();
+  const errors = {};
+  try {
+    // Take user id
+    const id = req.user.id;
+    // console.log('id', id);
+
+    const txFindProfileByUser = `SELECT   p.id
+                                        , p.id_user
+                                FROM profile p
+                                WHERE id_user = $1;`;
+
+    const params_id = [id];
+    let result = await pool.query(txFindProfileByUser, params_id);
+
+    console.log('result ==> ', result);
+
+    if (result.rowCount === 0) {
+      errors.profile = 'There is no profile for this user';
+      //return res.status(400).send({ success: false, errors });
+    }
+
+    if (result.rowCount > 0) {
+      const txDeleteSocial = `DELETE FROM social
+      WHERE social.id_profile = (SELECT id FROM profile WHERE id_user = $1) RETURNING *;`;
+
+      const params_social = [id];
+      let result_social = await pool.query(txDeleteSocial, params_social);
+
+      console.log('result social ==> ', result_social);
+
+      const txDeleteProfile = `DELETE FROM profile
+                                WHERE id_user = $1 RETURNING *;`;
+      const params_profile = [id];
+
+      let result_profile = await pool.query(txDeleteProfile, params_profile);
+
+      console.log('result profile==>', result_profile);
+    }
+
+    const txDeleteUser = `DELETE FROM users
+                          WHERE id = $1 RETURNING *;`;
+    const params_user = [id];
+    let result_user = await pool.query(txDeleteUser, params_user);
+
+    console.log('result_user ==>', result_user);
+
+    return res.status(200).send({ success: true, message: 'Profile removed' });
   } catch (e) {
     console.log({ err: e });
     return res.status(500).send({ success: false, error: 'Server Error' });
@@ -305,6 +466,7 @@ const controller = {
   create: createProfile,
   update: updateProfile,
   all: allProfiles,
+  profileByUser: profileByUser,
+  delete: deleteProfile,
 };
-
 module.exports = controller;
