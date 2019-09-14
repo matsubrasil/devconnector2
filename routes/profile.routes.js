@@ -12,4 +12,5 @@ route.post('/', auth, profileController.create);
 route.put('/', auth, profileController.update);
 route.get('/user/:user_id', profileController.profileByUser);
 route.delete('/', auth, profileController.delete);
+route.post('/experience', auth, profileController.experience);
 module.exports = route;

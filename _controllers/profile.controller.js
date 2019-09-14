@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const validateProfileInput = require('./../_shared/_validation/profileInput.validation');
+const validateExperienceInput = require('./../_shared/_validation/experienceInput.validation');
 
 const pool = new Pool();
 
@@ -123,7 +124,9 @@ const createProfile = async (req, res) => {
     ];
     let result = await pool.query(txInsertProfile, params_profile);
     console.log('result ==>', result);
+
     let result_social = null;
+
     if (result.rowCount == 1) {
       const id_profile = result.rows[0].id;
 
@@ -460,6 +463,89 @@ const deleteProfile = async (req, res) => {
     client.release();
   }
 };
+
+// ---------------------------------------------------------
+// @route   POST api/profile/experience
+// @desc    Add experience
+// @access  Private
+const addExperience = async (req, res) => {
+  console.log('req.body-->', req.body);
+  const { errors, isValid } = validateExperienceInput(req.body);
+
+  // Check Validation
+  if (!isValid) {
+    // If any errors, send 400 with errors object
+    return res.status(400).send({ success: false, error: errors });
+  }
+
+  console.log('passou-----');
+  // Open connection
+  const client = await pool.connect();
+
+  try {
+    // Take user id
+    const id = req.user.id;
+    // console.log('id', id);
+    const txFindProfileByUser = `SELECT   p.id
+                                        , p.id_user
+                                FROM profile p
+                                WHERE id_user = $1;`;
+
+    const params_id = [id];
+    let result = await pool.query(txFindProfileByUser, params_id);
+
+    const id_profile = result.rows[0].id;
+    console.log('id_profile -->', id_profile);
+    const {
+      title,
+      company,
+      location,
+      current,
+      description,
+      date_from,
+      date_to,
+    } = req.body;
+
+    const texInsertExperience = `INSERT INTO Experience (
+      id_profile,
+      title,
+      company,
+      location,
+      current,
+      description,
+      date_from,
+      date_to
+
+    ) VALUES ($1, $2, $3, $4, $5, $6,  $7, $8) RETURNING *;`;
+    const params_experience = [
+      id_profile,
+      title,
+      company,
+      location,
+      current,
+      description,
+      date_from,
+      date_to,
+    ];
+
+    result_experience = await pool.query(
+      texInsertExperience,
+      params_experience,
+    );
+
+    console.log('result_experience ==>', result_experience);
+
+    return res.status(200).send({ success: true, message: 'Experience add' });
+
+    //
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+
 //
 const controller = {
   profile,
@@ -468,5 +554,6 @@ const controller = {
   all: allProfiles,
   profileByUser: profileByUser,
   delete: deleteProfile,
+  experience: addExperience,
 };
 module.exports = controller;

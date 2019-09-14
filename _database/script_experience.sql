@@ -6,13 +6,15 @@ DROP TABLE experience;
 CREATE TABLE experience
 (
   id serial NOT NULL PRIMARY KEY,
-  id_user INTEGER NOT NULL,
+  id_profile INTEGER NOT NULL,
   title VARCHAR(100) NOT NULL,
   company VARCHAR(100) NOT NULL,
   location VARCHAR(100),
-  currenty BOOLEAN DEFAULT FALSE,
+  current BOOLEAN DEFAULT FALSE,
   description text,
   date_from DATE NOT NULL,
   date_to DATE,
-  FOREIGN KEY (id_user) REFERENCES users (id)
+  FOREIGN KEY
+  (id_profile) REFERENCES profile
+  (id)
 );
