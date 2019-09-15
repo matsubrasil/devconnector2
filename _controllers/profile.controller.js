@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const validateProfileInput = require('./../_shared/_validation/profileInput.validation');
 const validateExperienceInput = require('./../_shared/_validation/experienceInput.validation');
+const validateEducationInput = require('./../_shared/_validation/educationInput.validation');
 
 const pool = new Pool();
 
@@ -156,6 +157,8 @@ const createProfile = async (req, res) => {
       profile: result.rows[0],
       social: result_social.rows[0],
     });
+
+    //
   } catch (e) {
     console.log({ err: e });
     return res.status(500).send({ success: false, error: 'Server Error' });
@@ -249,6 +252,8 @@ const updateProfile = async (req, res) => {
       profile: result.rows[0],
       social: result_social.rows[0],
     });
+
+    //
   } catch (e) {
     console.log({ err: e });
     return res.status(500).send({ success: false, error: 'Server Error' });
@@ -332,6 +337,8 @@ const allProfiles = async (req, res) => {
       success: true,
       profiles: profiles,
     });
+
+    //
   } catch (e) {
     console.log({ err: e });
     return res.status(500).send({ success: false, error: 'Server Error' });
@@ -469,7 +476,7 @@ const deleteProfile = async (req, res) => {
 // @desc    Add experience
 // @access  Private
 const addExperience = async (req, res) => {
-  console.log('req.body-->', req.body);
+  // console.log('req.body-->', req.body);
   const { errors, isValid } = validateExperienceInput(req.body);
 
   // Check Validation
@@ -478,7 +485,7 @@ const addExperience = async (req, res) => {
     return res.status(400).send({ success: false, error: errors });
   }
 
-  console.log('passou-----');
+  // console.log('passou-----');
   // Open connection
   const client = await pool.connect();
 
@@ -546,6 +553,276 @@ const addExperience = async (req, res) => {
   }
 };
 
+// ---------------------------------------------------------
+// @route   DELETE api/profile/experience/:id_experience
+// @desc    Remove experience
+// @access  Private
+const deleteExperience = async (req, res) => {
+  console.log('passou-----');
+  // Open connection
+  const client = await pool.connect();
+  const id = req.user.id;
+  const id_experience = req.params.id_experience;
+
+  try {
+    const txDeleteExperience = `DELETE FROM experience
+                                WHERE id = $2 
+                                  AND id_profile = (
+                                                      SELECT id FROM profile
+                                                      WHERE id_user = $1
+                                                    )
+                                RETURNING *;`;
+    const params_experience = [id, id_experience];
+
+    let result_delete = await pool.query(txDeleteExperience, params_experience);
+
+    console.log('result experience delete ==>', result_delete);
+
+    if (result_delete.rowCount === 0) {
+      console.log('Experience not found');
+      return res
+        .status(400)
+        .send({ success: false, message: 'Experience not found' });
+    }
+    return res
+      .status(200)
+      .send({ success: true, message: 'Experience removed' });
+
+    //
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+// ---------------------------------------------------------
+// @route   GET api/profile/experience/
+// @desc    Get experience current user
+// @access  Private
+const getExperience = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    // Take user id
+    const id = req.user.id;
+    // console.log('id', id);
+    const txFindProfileByUser = `SELECT   p.id
+                                        , p.id_user
+                                FROM profile p
+                                WHERE id_user = $1;`;
+
+    const params_id = [id];
+    let result = await pool.query(txFindProfileByUser, params_id);
+    const id_profile = result.rows[0].id;
+
+    const txFindExperienceByUser = `SELECT id
+                                          , id_profile
+                                          , title
+                                          , company
+                                          , location
+                                          , current
+                                          , description
+                                          , date_from
+                                          , date_to
+                                    FROM experience
+                                    WHERE id_profile = $1;`;
+    const params_experience = [id_profile];
+
+    let result_experience = await pool.query(
+      txFindExperienceByUser,
+      params_experience,
+    );
+
+    console.log('experience-->', result_experience);
+
+    if (result_experience.rowCount === 0) {
+      res.status(200).send({ success: true, message: 'Experience not found' });
+    }
+
+    return res
+      .status(200)
+      .send({ success: true, experiences: result_experience.rows });
+
+    //
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+
+// ---------------------------------------------------------
+// @route   POST api/profile/education
+// @desc    Add education
+// @access  Private
+const addEducation = async (req, res) => {
+  // console.log('req.body-->', req.body);
+  const { errors, isValid } = validateEducationInput(req.body);
+
+  // Check Validation
+  if (!isValid) {
+    // If any errors, send 400 with errors object
+    return res.status(400).send({ success: false, error: errors });
+  }
+
+  // console.log('passou-----');
+  // Open connection
+  const client = await pool.connect();
+
+  try {
+    // Take user id
+    const id = req.user.id;
+    // console.log('id', id);
+    const txFindProfileByUser = `SELECT   p.id
+                                        , p.id_user
+                                FROM profile p
+                                WHERE id_user = $1;`;
+
+    const params_id = [id];
+    let result = await pool.query(txFindProfileByUser, params_id);
+
+    const id_profile = result.rows[0].id;
+
+    console.log('id_profile -->', id_profile);
+
+    const {
+      school,
+      degree,
+      fieldofstudy,
+      current,
+      description,
+      date_from,
+      date_to,
+    } = req.body;
+
+    const texInsertEducation = `INSERT INTO Education (
+      id_profile,
+      school,
+      degree,
+      fieldofstudy,
+      current,
+      description,
+      date_from,
+      date_to
+
+    ) VALUES ($1, $2, $3, $4, $5, $6,  $7, $8) RETURNING *;`;
+    const params_education = [
+      id_profile,
+      school,
+      degree,
+      fieldofstudy,
+      current,
+      description,
+      date_from,
+      date_to,
+    ];
+
+    result_education = await pool.query(texInsertEducation, params_education);
+
+    console.log('result_education ==>', result_education);
+
+    return res.status(200).send({ success: true, message: 'Education add' });
+
+    //
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+
+// ---------------------------------------------------------
+// @route   DELETE api/profile/education/:id_education
+// @desc    Remove education
+// @access  Private
+const deleteEducation = async (req, res) => {
+  // Open connection
+  const client = await pool.connect();
+  const id = req.user.id;
+  const id_education = req.params.id_education;
+
+  try {
+    const txDeleteEducation = `DELETE FROM education
+                               WHERE id = $2 
+                               AND id_profile = ( SELECT   p.id
+                                                  FROM profile p
+                                                  WHERE id_user = $1) RETURNING *;`;
+    const params_education = [id, id_education];
+
+    let result_delete = await pool.query(txDeleteEducation, params_education);
+
+    console.log('result education delete ==>', result_delete);
+
+    if (result_delete.rowCount === 0) {
+      console.log('Education not found');
+      return res
+        .status(400)
+        .send({ success: false, message: 'Education not found' });
+    }
+    return res
+      .status(200)
+      .send({ success: true, message: 'Education removed' });
+
+    //
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+
+// ---------------------------------------------------------
+// @route   GET api/profile/education
+// @desc    Get education current user
+// @access  Private
+const getEducation = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    // Take user id
+    const id = req.user.id;
+
+    const txFindEducationByUser = `SELECT   id
+                                          , id_profile
+                                          , school
+                                          , degree
+                                          , fieldofstudy
+                                          , current
+                                          , description
+                                          , date_from
+                                          , date_to
+                                    FROM education
+                                    WHERE id_profile = ( SELECT id FROM profile WHERE id_user = $1);`;
+    const params_education = [id];
+
+    let result_education = await pool.query(
+      txFindEducationByUser,
+      params_education,
+    );
+
+    console.log('education-->', result_education);
+
+    if (result_education.rowCount === 0) {
+      res.status(200).send({ success: true, message: 'Education not found' });
+    }
+
+    return res
+      .status(200)
+      .send({ success: true, educations: result_education.rows });
+
+    //
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  } finally {
+    client.release();
+  }
+};
+
 //
 const controller = {
   profile,
@@ -554,6 +831,11 @@ const controller = {
   all: allProfiles,
   profileByUser: profileByUser,
   delete: deleteProfile,
-  experience: addExperience,
+  addExperience,
+  deleteExperience,
+  getExperience,
+  addEducation,
+  deleteEducation,
+  getEducation,
 };
 module.exports = controller;

@@ -4,13 +4,12 @@ DROP TABLE education;
 CREATE TABLE education
 (
   id serial NOT NULL PRIMARY KEY,
-  id_profile INTEGER NOT NULL,
+  id_profile INTEGER NOT NULL REFERENCES profile(id),
   school VARCHAR(100) NOT NULL,
   degree VARCHAR(100) NOT NULL,
   fieldofstudy VARCHAR(100) NOT NULL,
   date_from DATE NOT NULL,
   date_to DATE,
-  currenty BOOLEAN DEFAULT FALSE,
-  description text,
-  FOREIGN KEY (id_profile) REFERENCES profile (id)
+  current BOOLEAN DEFAULT FALSE,
+  description text
 );
