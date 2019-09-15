@@ -1,3 +1,5 @@
+const request = require('request');
+
 const { Pool } = require('pg');
 const validateProfileInput = require('./../_shared/_validation/profileInput.validation');
 const validateExperienceInput = require('./../_shared/_validation/experienceInput.validation');
@@ -823,6 +825,49 @@ const getEducation = async (req, res) => {
   }
 };
 
+// ---------------------------------------------------------
+// @route   GET api/profile/github/;username
+// @desc    Get user repos from Github
+// @access  Private
+
+const getGithub = async (req, res) => {
+  try {
+    const username = req.params.username;
+    const id = req.user.id;
+    const githubClientId = process.env.GITHUBCLIENTEID;
+    const githubSecret = process.env.GITHUBSECRET;
+    const str_url = `https://api.github.com/users/${username}/repos?per_page=5&sort=created:asc&client_id=${githubClientId}&client_secret=${githubSecret}`;
+
+    const options = {
+      uri: str_url,
+      method: 'GET',
+      headers: { 'user-agent': 'node.js' },
+    };
+
+    // console.log('str_utrl-->', str_url);
+    request(options, (error, response, body) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).send({ success: false, error: error.message });
+      }
+
+      if (response.statusCode !== 200) {
+        return res
+          .status(404)
+          .send({ success: false, message: 'No Github profile found' });
+      }
+      res.status(200).send({ success: true, github: JSON.parse(body) });
+    });
+
+    // return res.status(500).send({ success: false, error: str_url });
+
+    //
+  } catch (e) {
+    console.log({ err: e });
+    return res.status(500).send({ success: false, error: 'Server Error' });
+  }
+};
+
 //
 const controller = {
   profile,
@@ -837,5 +882,6 @@ const controller = {
   addEducation,
   deleteEducation,
   getEducation,
+  getGithub,
 };
 module.exports = controller;

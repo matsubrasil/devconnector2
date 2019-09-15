@@ -27,4 +27,5 @@ route.delete(
   profileController.deleteEducation,
 );
 route.get('/education/me', auth, profileController.getEducation);
+route.get('/github/:username', auth, profileController.getGithub);
 module.exports = route;
