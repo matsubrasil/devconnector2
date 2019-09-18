@@ -20,13 +20,12 @@ const user_info = async (req, res) => {
 
     // console.log('result ==> ', result);
     const { name, email, avatar, create_at } = result.rows[0];
-    console.log();
     return res
       .status(201)
-      .send({ success: true, user1: { id, name, email, avatar, create_at } });
+      .send({ success: true, user: { id, name, email, avatar, create_at } });
   } catch (e) {
-    console.log({ err: e.message });
-    return res.status(500).send({ success: false, error: 'Server Error' });
+    console.log({ err_get_api_auth: e.message });
+    return res.status(500).send({ success: false, message: 'Server Error' });
   } finally {
     client.release();
   }
