@@ -51,7 +51,8 @@ const register = async (req, res) => {
   // Check Validation
   if (!isValid) {
     // If any errors, send 400 with errors object
-    return res.status(400).send({ success: false, error: errors });
+    console.log('auth.controller:message:errors==>', errors);
+    return res.status(400).json({ success: false, message: errors });
   }
 
   const { name, email, password } = req.body;
@@ -70,7 +71,7 @@ const register = async (req, res) => {
 
     if (result.rowCount === 1) {
       errors.email = 'User already registered!';
-      return res.status(400).send({ success: false, errors });
+      return res.status(400).json({ success: false, message: errors });
     }
 
     // else {
@@ -110,7 +111,7 @@ const register = async (req, res) => {
       expiresIn: 3600,
     });
 
-    return res.status(200).send({ success: true, token });
+    return res.status(200).json({ success: true, token });
 
     // //return information
     // const newUser = {
@@ -122,8 +123,8 @@ const register = async (req, res) => {
 
     // Return jwt
   } catch (e) {
-    console.error('error', e.message);
-    return res.status(500).send({ error: e.message });
+    console.error('error (catch)', e);
+    return res.status(500).json({ success: false, message: e.message });
   } finally {
     client.release();
   }
