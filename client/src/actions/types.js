@@ -6,3 +6,4 @@ export const USER_LOAD = 'auth/USER_LOAD';
 export const AUTH_ERROR = 'auth/AUTH_ERROR';
 export const LOGIN_SUCCESS = 'auth/LOGIN_SUCCESS';
 export const LOGIN_FAIL = 'auth/LOGIN_FAIL';
+export const LOGOUT = 'auth/LOGIN_FAIL';
