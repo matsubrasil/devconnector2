@@ -2,7 +2,7 @@ import { SET_ALERT, REMOVE_ALERT } from './../actions/types';
 
 const initialState = [];
 
-const alert = (state = initialState, { type, payload }) => {
+const alertReducer = (state = initialState, { type, payload }) => {
   switch (type) {
     case SET_ALERT:
       return [...state, payload];
@@ -13,7 +13,7 @@ const alert = (state = initialState, { type, payload }) => {
   }
 };
 
-export default alert;
+export default alertReducer;
 
 /*
 const counter = (state = initialState, action) => {

@@ -8,7 +8,7 @@ const validateEducationInput = require('./../_shared/_validation/educationInput.
 const pool = new Pool();
 
 // ---------------------------------------------------------
-// @route   GET api/profile/
+// @route   GET api/profile/me
 // @desc    Get current user profile
 // @access  Private
 const profile = async (req, res) => {
@@ -42,7 +42,7 @@ const profile = async (req, res) => {
 
     if (result.rowCount === 0) {
       errors.profile = 'There is no profile for this user';
-      return res.status(400).send({ success: false, errors });
+      return res.status(400).send({ success: false, message: errors });
     }
     const id_profile = result.rows[0].id;
 
@@ -65,7 +65,7 @@ const profile = async (req, res) => {
     });
   } catch (e) {
     console.log({ err: e });
-    return res.status(500).send({ success: false, error: 'Server Error' });
+    return res.status(500).send({ success: false, message: 'Server Error' });
   } finally {
     client.release();
   }
