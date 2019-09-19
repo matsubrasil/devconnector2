@@ -14,11 +14,9 @@ CREATE TABLE users
   id SERIAL PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
   email VARCHAR(200) UNIQUE NOT NULL,
-  password VARCHAR(20) NOT NULL,
+  password VARCHAR(100) NOT NULL,
   avatar varchar(100),
   create_at DATE default Now()
 );
 
-ALTER TABLE users ALTER COLUMN password TYPE
-varchar
-(100);
+--ALTER TABLE users ALTER COLUMN password TYPE varchar(100);
