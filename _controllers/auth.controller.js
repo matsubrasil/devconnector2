@@ -141,7 +141,7 @@ const login = async (req, res) => {
   // Check Validation
   if (!isValid) {
     // If any errors, send 400 with errors object
-    return res.status(400).send({ success: false, error: errors });
+    return res.status(400).send({ success: false, message: errors });
   }
 
   const { email, password } = req.body;
@@ -161,7 +161,7 @@ const login = async (req, res) => {
 
     if (result.rowCount === 0) {
       errors.credential = 'Invalid credentials';
-      return res.status(400).send({ success: false, errors });
+      return res.status(400).send({ success: false, message: errors });
     }
 
     const { id, password: bd_password } = result.rows[0];
@@ -170,7 +170,7 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, bd_password);
     if (!isMatch) {
       errors.credential = 'Invalid credentials';
-      return res.status(400).send({ success: false, errors });
+      return res.status(400).send({ success: false, message: errors });
     }
 
     const payload = {
@@ -188,7 +188,7 @@ const login = async (req, res) => {
     // Return jwt
   } catch (e) {
     console.error('error', e.message);
-    return res.status(500).send({ error: e.message });
+    return res.status(500).json({ success: false, message: e.message });
   } finally {
     client.release();
   }
