@@ -67,11 +67,11 @@ img {
 }
 
 .text-primary {
-  color: var(--primary-color);
+  color: var(--primary-color) !important;
 }
 
 .text-dark {
-  color: var(--dark-color);
+  color: var(--dark-color) !important;
 }
 
 /* Padding */
@@ -324,6 +324,7 @@ button {
 
 .navbar a:hover {
   color: var(--primary-color);
+  text-decoration: none;
 }
 
 .navbar .welcome span {
